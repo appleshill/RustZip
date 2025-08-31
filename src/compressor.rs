@@ -1,26 +1,30 @@
-use sha2::{Sha256, Digest};
-use hex;
-use rayon::ThreadPoolBuilder;
-use std::path::PathBuf;
-use std::{fs::File, io::{Read, Write}, path::Path};
-use zstd::stream::{Encoder, Decoder};
-use std::time::Instant;
-use std::fs::metadata;
-use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
-use colored::*;
-use anyhow::Context;
-use walkdir::WalkDir;
-use flate2::write::{GzEncoder, GzDecoder};
-use flate2::Compression as GzCompression;
-use lz4_flex::frame::{FrameEncoder as Lz4Encoder, FrameDecoder as Lz4Decoder};
+use std::{
+    fs::File,
+    io::{Read, Write},
+    path::{Path, PathBuf},
+    fs::metadata,
+    time::Instant,
+};
 
-/// Zstd implementation
+use anyhow::Context;
+use colored::*;
+use flate2::write::{GzDecoder, GzEncoder};
+use flate2::Compression as GzCompression;
+use hex;
+use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
+use lz4_flex::frame::{FrameDecoder as Lz4Decoder, FrameEncoder as Lz4Encoder};
+use rayon::ThreadPoolBuilder;
+use sha2::{Digest, Sha256};
+use walkdir::WalkDir;
+use zstd::stream::{Decoder, Encoder};
+
+/// Zstd 
 pub struct ZstdCompressor;
 
-/// Gzip implementation
+/// Gzip 
 pub struct GzipCompressor;
 
-/// Lz4 implementation
+/// Lz4 
 pub struct Lz4Compressor;
 /// Trait for multi-format compression support (object-safe)
 pub trait Compressor {
@@ -74,7 +78,7 @@ impl Compressor for Lz4Compressor {
     fn extension(&self) -> &'static str { "lz4" }
 }
 
-/// Compress a file or directory using the given compressor
+/// Compress a file or directory
 pub fn compress_path_with(input_path: &str, output_path: &str, threads: usize, level: i32, compressor: &dyn Compressor) -> anyhow::Result<()> {
     ThreadPoolBuilder::new().num_threads(threads).build_global().ok();
     let input = Path::new(input_path);
@@ -121,7 +125,7 @@ pub fn compress_path_with(input_path: &str, output_path: &str, threads: usize, l
     Ok(())
 }
 
-/// Compress a single file using the given compressor
+/// Compress a single file
 pub fn compress_single_file_with(
     input_path: &Path,
     output_path: &Path,
@@ -183,7 +187,7 @@ pub fn compress_single_file_with(
     })
 }
 
-/// Decompress a file using the given compressor
+/// Decompress a file
 pub fn decompress_file_with(input_path: &str, output_path: &str, compressor: &dyn Compressor) -> anyhow::Result<()> {
     let mut input_file = File::open(input_path)?;
     let mut output_file = File::create(output_path)?;
